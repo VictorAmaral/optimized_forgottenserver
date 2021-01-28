@@ -732,7 +732,10 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 	//check throw distance
 	const Position& movingCreaturePos = movingCreature->getPosition();
 	const Position& toPos = toTile->getPosition();
-	if ((Position::getDistanceX(movingCreaturePos, toPos) > movingCreature->getThrowRange()) || (Position::getDistanceY(movingCreaturePos, toPos) > movingCreature->getThrowRange()) || (Position::getDistanceZ(movingCreaturePos, toPos) * 4 > movingCreature->getThrowRange())) {
+
+	int32_t throwRange = movingCreature->getThrowRange();
+	if (Position::getDistanceX(movingCreaturePos, toPos) > throwRange || Position::getDistanceY(movingCreaturePos, toPos) > throwRange ||
+			Position::getDistanceZ(movingCreaturePos, toPos) > 0) {
 		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
 		return;
 	}
@@ -1029,9 +1032,9 @@ void Game::playerMoveItem(Player* player, const Position& fromPos,
 		}
 	}
 
-	if ((Position::getDistanceX(playerPos, mapToPos) > item->getThrowRange()) ||
-	        (Position::getDistanceY(playerPos, mapToPos) > item->getThrowRange()) ||
-	        (Position::getDistanceZ(mapFromPos, mapToPos) * 4 > item->getThrowRange())) {
+	int32_t throwRange = item->getThrowRange();
+	if (Position::getDistanceX(playerPos, mapToPos) > throwRange || Position::getDistanceY(playerPos, mapToPos) > throwRange ||
+			(!item->isPickupable() && Position::getDistanceZ(mapFromPos, mapToPos) > 0)) {
 		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
 		return;
 	}
@@ -3182,7 +3185,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 		return;
 	}
 
-	if (!canThrowObjectTo(tradePartner->getPosition(), player->getPosition())) {
+	if (!canThrowObjectTo(tradePartner->getPosition(), player->getPosition(), SightLine_CheckSightLineAndFloor)) {
 		player->sendCancelMessage(RETURNVALUE_CREATUREISNOTREACHABLE);
 		return;
 	}
@@ -3310,7 +3313,7 @@ void Game::playerAcceptTrade(Player* player)
 		return;
 	}
 
-	if (!canThrowObjectTo(tradePartner->getPosition(), player->getPosition())) {
+	if (!canThrowObjectTo(tradePartner->getPosition(), player->getPosition(), SightLine_CheckSightLineAndFloor)) {
 		player->sendCancelMessage(RETURNVALUE_CREATUREISNOTREACHABLE);
 		return;
 	}
@@ -4057,10 +4060,10 @@ void Game::playerSpeakToNpc(Player* player, const std::string& text)
 }
 
 //--
-bool Game::canThrowObjectTo(const Position& fromPos, const Position& toPos, bool checkLineOfSight /*= true*/,
+bool Game::canThrowObjectTo(const Position& fromPos, const Position& toPos, SightLines_t lineOfSight /*= SightLine_CheckSightLine*/,
                             int32_t rangex /*= Map::maxClientViewportX*/, int32_t rangey /*= Map::maxClientViewportY*/) const
 {
-	return map.canThrowObjectTo(fromPos, toPos, checkLineOfSight, rangex, rangey);
+	return map.canThrowObjectTo(fromPos, toPos, lineOfSight, rangex, rangey);
 }
 
 bool Game::isSightClear(const Position& fromPos, const Position& toPos, bool floorCheck) const

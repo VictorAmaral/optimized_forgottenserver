@@ -206,7 +206,7 @@ class Map
 		  *	\param checkLineOfSight checks if there is any blocking objects in the way
 		  *	\returns The result if you can throw there or not
 		  */
-		bool canThrowObjectTo(const Position& fromPos, const Position& toPos, bool checkLineOfSight = true,
+		bool canThrowObjectTo(const Position& fromPos, const Position& toPos, SightLines_t lineOfSight = SightLine_CheckSightLine,
 		                      int32_t rangex = Map::maxClientViewportX, int32_t rangey = Map::maxClientViewportY) const;
 
 		/**
@@ -218,7 +218,7 @@ class Map
 		  *	\returns The result if there is no obstacles
 		  */
 		bool isSightClear(const Position& fromPos, const Position& toPos, bool floorCheck) const;
-		bool checkSightLine(const Position& fromPos, const Position& toPos) const;
+		bool checkSightLine(Position start, Position destination) const;
 
 		const Tile* canWalkTo(const Creature& creature, const Position& pos) const;
 
