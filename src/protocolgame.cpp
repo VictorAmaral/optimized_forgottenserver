@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -800,8 +801,8 @@ void ProtocolGame::checkCreatureAsKnown(uint32_t id, bool& known, uint32_t& remo
 		for (auto it = knownCreatureSet.begin(), end = knownCreatureSet.end(); it != end; ++it) {
 			// We need to protect party players from removing
 			Creature* creature = g_game.getCreatureByID(*it);
-			if (creature && creature->getPlayer()) {
-				Player* checkPlayer = creature->getPlayer();
+			Player* checkPlayer;
+			if (creature && (checkPlayer = creature->getPlayer()) != nullptr) {
 				if (player->getParty() != checkPlayer->getParty() && !canSee(creature)) {
 					removedKnown = *it;
 					knownCreatureSet.erase(it);
@@ -994,24 +995,24 @@ void ProtocolGame::parseTrackedQuestFlags(NetworkMessage& msg)
 
 void ProtocolGame::parseAutoWalk(NetworkMessage& msg)
 {
-	uint8_t numdirs = msg.getByte();
+	size_t numdirs = static_cast<size_t>(msg.getByte());
 	if (numdirs == 0) {
 		return;
 	}
 
 	std::vector<Direction> path;
 	path.resize(numdirs, DIRECTION_NORTH);
-	for (uint8_t i = 0; i < numdirs; ++i) {
+	for (size_t i = numdirs; --i < numdirs;) {
 		uint8_t rawdir = msg.getByte();
 		switch (rawdir) {
-			case 1: path[numdirs - i - 1] = DIRECTION_EAST; break;
-			case 2: path[numdirs - i - 1] = DIRECTION_NORTHEAST; break;
-			case 3: path[numdirs - i - 1] = DIRECTION_NORTH; break;
-			case 4: path[numdirs - i - 1] = DIRECTION_NORTHWEST; break;
-			case 5: path[numdirs - i - 1] = DIRECTION_WEST; break;
-			case 6: path[numdirs - i - 1] = DIRECTION_SOUTHWEST; break;
-			case 7: path[numdirs - i - 1] = DIRECTION_SOUTH; break;
-			case 8: path[numdirs - i - 1] = DIRECTION_SOUTHEAST; break;
+			case 1: path[i] = DIRECTION_EAST; break;
+			case 2: path[i] = DIRECTION_NORTHEAST; break;
+			case 3: path[i] = DIRECTION_NORTH; break;
+			case 4: path[i] = DIRECTION_NORTHWEST; break;
+			case 5: path[i] = DIRECTION_WEST; break;
+			case 6: path[i] = DIRECTION_SOUTHWEST; break;
+			case 7: path[i] = DIRECTION_SOUTH; break;
+			case 8: path[i] = DIRECTION_SOUTHEAST; break;
 			default: break;
 		}
 	}
@@ -2717,8 +2718,8 @@ void ProtocolGame::sendHighscores(const std::vector<HighscoreCharacter>& charact
 	playermsg.addString(g_config.getString(ConfigManager::SERVER_NAME)); // Selected World
 
 	#if CLIENT_VERSION >= 1260
-	playermsg.addByte(0xFF);//Game World Category: 0xFF(-1) - Selected World
-	playermsg.addByte(0xFF);//BattlEye World Type
+	playermsg.addByte(0x00);//Game World Category - Our Server
+	playermsg.addByte(0x00);//BattlEye World Type - Not Protected
 	#endif
 
 	auto vocationPosition = playermsg.getBufferPosition();
@@ -5153,8 +5154,14 @@ void ProtocolGame::sendModalWindow(const ModalWindow& modalWindow)
 	}
 	#endif
 
-	playermsg.addByte(modalWindow.defaultEscapeButton);
-	playermsg.addByte(modalWindow.defaultEnterButton);
+	OperatingSystem_t regularOS = player->getOperatingSystem();
+	if (regularOS >= CLIENTOS_NEW_LINUX && regularOS < CLIENTOS_OTCLIENT_LINUX) {
+		playermsg.addByte(modalWindow.defaultEnterButton);
+		playermsg.addByte(modalWindow.defaultEscapeButton);
+	} else {
+		playermsg.addByte(modalWindow.defaultEscapeButton);
+		playermsg.addByte(modalWindow.defaultEnterButton);
+	}
 	#if CLIENT_VERSION >= 970
 	playermsg.addByte(modalWindow.priority ? 0x01 : 0x00);
 	#endif

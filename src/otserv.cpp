@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,9 +127,43 @@ void mainLoader(int, char*[], ServiceManager* services)
 	std::cout << std::endl;
 
 	std::cout << "A server developed by " << STATUS_SERVER_DEVELOPERS << std::endl;
-	std::cout << "Visit our forum for updates, support, and resources: http://otland.net/." << std::endl;
 	std::cout << "Server protocol: " << CLIENT_VERSION_UPPER << "." << CLIENT_VERSION_LOWER << std::endl;
+
 	std::cout << std::endl;
+	std::cout << "                    .*#%%/                            (&&#*.                    " << std::endl;
+	std::cout << "               *(%%&%/.                                  ,(&&&%(*               " << std::endl;
+	std::cout << "           .%%&&&&%,                                        *&&&&&&%.           " << std::endl;
+	std::cout << "          ,&&&&&&#                                            %&&&&&&.          " << std::endl;
+	std::cout << "     ,&/  (&&&&&&                                             .&&&&&&/  (&.     " << std::endl;
+	std::cout << "   .%&&#  %&&&%%/                                              %%%&&&(  %&&%    " << std::endl;
+	std::cout << "  /&&&&&/ (%%%%%(                                              %%%&%%* #&&&&&*  " << std::endl;
+	std::cout << " .&&&&&&&( %%%%%%.                                            ,%%%%%% #&&&&&&&  " << std::endl;
+	std::cout << " *&&&&&&%%%*%%%%%#                                            %%%%%#(%%%&&&&&&. " << std::endl;
+	std::cout << "  ,&&&%%%%%%%%####,                                          *##%#%%%%%%%%%&&.  " << std::endl;
+	std::cout << "%,  (&%%%%%#%%###.                                            .#####%%%%%%%/  *(" << std::endl;
+	std::cout << "(&&(. *%%%%%####* /.                                        ., /####%%%%#* .(%&/" << std::endl;
+	std::cout << ".&&%&%#. /###%##, *#,                                      *#, *#####%* ,#%%%%%." << std::endl;
+	std::cout << " #%%%%%%%%#/####(  (((,           .,*,*//**,..           *((/ .#####/#%#%%%%%%/ " << std::endl;
+	std::cout << "  /%%%%%%%######((. *(((/.         .*/*/*/****        ,((((, *((######%#%%%%%,  " << std::endl;
+	std::cout << "    *#%%%#######(#((* ,((///*,       */*****..    ,/(((((, *((#(#######%#%#,    " << std::endl;
+	std::cout << "          ./((##(((((((/ ,//////.    *******,   //(((/. /((((((##((/*.          " << std::endl;
+	std::cout << "      ,####((////*/(((((///*/////*/*,*********///////((((((((/////(((####.      " << std::endl;
+	std::cout << "        .#######((((((((//////////***/*****//////(/((/((((((((((#(#####         " << std::endl;
+	std::cout << "           *(###(((((, .,*//////////*****//////////(//,,. ,((((((##(,           " << std::endl;
+	std::cout << "               *((((((((.     *///*/***///////(//*     *((((((((*               " << std::endl;
+	std::cout << "                    .,,**//*.    .,////.*////,     ,*/**,,,.                    " << std::endl;
+	std::cout << "                                  *(/,    //(/                                  " << std::endl;
+	std::cout << "                                ./((((((((((((/.                                " << std::endl;
+	std::cout << "                               ((((* ,(.*(. /((((.                              " << std::endl;
+	std::cout << "                            *(((((./*,(.*( (*.(((((/.                           " << std::endl;
+	std::cout << "                         ,##((#(./((*,(.*(.(((*.(((((#*                         " << std::endl;
+	std::cout << "                       *#####(,*####*,(./(.(####*,(####(                        " << std::endl;
+	std::cout << "                          (# (###### (#./#,*######( (/                          " << std::endl;
+	std::cout << "                            ,(#####,(##./##**#####*.                            " << std::endl;
+	std::cout << "                                #(.####./#### #/                                " << std::endl;
+	std::cout << "                                  ./%%%./%%#*                                   " << std::endl;
+	std::cout << std::endl;
+	std::this_thread::sleep_for(std::chrono::seconds(5));
 
 	// check if config.lua or config.lua.dist exist
 	std::ifstream c_test("./config.lua");

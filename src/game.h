@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -405,7 +406,7 @@ class Game
 		void playerCloseNpcChannel(Player* player);
 		void playerReceivePing(Player* player);
 		void playerReceivePingBack(Player* player);
-		void playerAutoWalk(uint32_t playerId, const std::vector<Direction>& listDir);
+		void playerAutoWalk(uint32_t playerId, std::vector<Direction>& listDir);
 		void playerStopAutoWalk(Player* player);
 		void playerUseItemEx(uint32_t playerId, const Position& fromPos, uint8_t fromStackPos,
 		                     uint16_t fromSpriteId, const Position& toPos, uint8_t toStackPos, uint16_t toSpriteId);

@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,17 +62,17 @@ extern Scripts* g_scripts;
 
 Game::Game()
 {
+	offlineTrainingWindow.defaultEnterButton = 1;
+	offlineTrainingWindow.defaultEscapeButton = 0;
 	offlineTrainingWindow.choices.emplace_back("Sword Fighting and Shielding", SKILL_SWORD);
 	offlineTrainingWindow.choices.emplace_back("Axe Fighting and Shielding", SKILL_AXE);
 	offlineTrainingWindow.choices.emplace_back("Club Fighting and Shielding", SKILL_CLUB);
 	offlineTrainingWindow.choices.emplace_back("Distance Fighting and Shielding", SKILL_DISTANCE);
 	offlineTrainingWindow.choices.emplace_back("Magic Level and Shielding", SKILL_MAGLEVEL);
 	offlineTrainingWindow.choices.shrink_to_fit();
-	offlineTrainingWindow.buttons.emplace_back("Okay", 1);
-	offlineTrainingWindow.buttons.emplace_back("Cancel", 0);
+	offlineTrainingWindow.buttons.emplace_back("Okay", offlineTrainingWindow.defaultEnterButton);
+	offlineTrainingWindow.buttons.emplace_back("Cancel", offlineTrainingWindow.defaultEscapeButton);
 	offlineTrainingWindow.buttons.shrink_to_fit();
-	offlineTrainingWindow.defaultEnterButton = 1;
-	offlineTrainingWindow.defaultEscapeButton = 0;
 	offlineTrainingWindow.priority = true;
 }
 
@@ -442,14 +443,19 @@ Creature* Game::getCreatureByName(const std::string& s)
 		return m_it->second;
 	}
 
+	const size_t lowerCaseName_len = lowerCaseName.length();
+	const char* lowerCaseName_cstr = lowerCaseName.c_str();
+
 	for (const auto& it : npcs) {
-		if (lowerCaseName == asLowerCaseString(it.second->getName())) {
+		const std::string& npcName = it.second->getName();
+		if (lowerCaseName_len == npcName.length() && !tfs_strncmp(lowerCaseName_cstr, asLowerCaseString(npcName).c_str(), lowerCaseName_len)) {
 			return it.second;
 		}
 	}
 
 	for (const auto& it : monsters) {
-		if (lowerCaseName == asLowerCaseString(it.second->getName())) {
+		const std::string& monsterName = it.second->getName();
+		if (lowerCaseName_len == monsterName.length() && !tfs_strncmp(lowerCaseName_cstr, asLowerCaseString(monsterName).c_str(), lowerCaseName_len)) {
 			return it.second;
 		}
 	}
@@ -462,9 +468,13 @@ Npc* Game::getNpcByName(const std::string& s)
 		return nullptr;
 	}
 
-	const char* npcName = s.c_str();
+	const std::string& lowerCaseName = asLowerCaseString(s);
+	const size_t lowerCaseName_len = lowerCaseName.length();
+	const char* lowerCaseName_cstr = lowerCaseName.c_str();
+
 	for (const auto& it : npcs) {
-		if (strcasecmp(npcName, it.second->getName().c_str()) == 0) {
+		const std::string& npcName = it.second->getName();
+		if (lowerCaseName_len == npcName.length() && !tfs_strncmp(lowerCaseName_cstr, asLowerCaseString(npcName).c_str(), lowerCaseName_len)) {
 			return it.second;
 		}
 	}
@@ -715,7 +725,7 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 		//need to walk to the creature first before moving it
 		std::vector<Direction> listDir;
 		if (player->getPathTo(movingCreatureOrigPos, listDir, 0, 1, true, false)) {
-			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 			player->setNextWalkActionTask(1500, std::bind(&Game::playerMoveCreatureByID, this, player->getID(), movingCreature->getID(), movingCreatureOrigPos, toTile->getPosition()));
 		} else {
 			player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -968,7 +978,7 @@ void Game::playerMoveItem(Player* player, const Position& fromPos,
 		//need to walk to the item first before using it
 		std::vector<Direction> listDir;
 		if (player->getPathTo(item->getPosition(), listDir, 0, 1, true, false)) {
-			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 			player->setNextWalkActionTask(400, std::bind(&Game::playerMoveItemByPlayerID, this, player->getID(), fromPos, spriteId, fromStackPos, toPos, count));
 		} else {
 			player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -1023,7 +1033,7 @@ void Game::playerMoveItem(Player* player, const Position& fromPos,
 
 			std::vector<Direction> listDir;
 			if (player->getPathTo(walkPos, listDir, 0, 0, true, false)) {
-				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 				player->setNextWalkActionTask(400, std::bind(&Game::playerMoveItemByPlayerID, this, player->getID(), itemPos, spriteId, itemStackPos, toPos, count));
 			} else {
 				player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -1881,7 +1891,7 @@ void Game::playerMove(Player* player, Direction direction)
 	player->resetIdleTime();
 	player->stopNextWalkActionTask();
 
-	player->startAutoWalk(std::vector<Direction>{ direction });
+	player->startAutoWalk(direction);
 }
 
 bool Game::playerBroadcastMessage(Player* player, const std::string& text) const
@@ -2582,7 +2592,7 @@ void Game::playerReceivePingBack(Player* player)
 	player->sendPingBack();
 }
 
-void Game::playerAutoWalk(uint32_t playerId, const std::vector<Direction>& listDir)
+void Game::playerAutoWalk(uint32_t playerId, std::vector<Direction>& listDir)
 {
 	Player* player = getPlayerByID(playerId);
 	if (!player) {
@@ -2591,7 +2601,7 @@ void Game::playerAutoWalk(uint32_t playerId, const std::vector<Direction>& listD
 
 	player->resetIdleTime();
 	player->stopNextWalkTask();
-	player->startAutoWalk(listDir);
+	player->startAutoWalk(std::move(listDir));
 }
 
 void Game::playerStopAutoWalk(Player* player)
@@ -2654,7 +2664,7 @@ void Game::playerUseItemEx(uint32_t playerId, const Position& fromPos, uint8_t f
 
 			std::vector<Direction> listDir;
 			if (player->getPathTo(walkToPos, listDir, 0, 1, true, false)) {
-				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 				player->setNextWalkActionTask(400, std::bind(&Game::playerUseItemEx, this, playerId, itemPos, itemStackPos, fromSpriteId, toPos, toStackPos, toSpriteId));
 			} else {
 				player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -2708,7 +2718,7 @@ void Game::playerUseItem(uint32_t playerId, const Position& pos, uint8_t stackPo
 		if (ret == RETURNVALUE_TOOFARAWAY) {
 			std::vector<Direction> listDir;
 			if (player->getPathTo(pos, listDir, 0, 1, true, false)) {
-				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 				player->setNextWalkActionTask(400, std::bind(&Game::playerUseItem, this, playerId, pos, stackPos, index, spriteId));
 				return;
 			}
@@ -2797,7 +2807,7 @@ void Game::playerUseWithCreature(uint32_t playerId, const Position& fromPos, uin
 
 			std::vector<Direction> listDir;
 			if (player->getPathTo(walkToPos, listDir, 0, 1, true, false)) {
-				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+				g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 				player->setNextWalkActionTask(400, std::bind(&Game::playerUseWithCreature, this, playerId, itemPos, itemStackPos, creatureId, spriteId));
 			} else {
 				player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -2856,6 +2866,13 @@ void Game::playerMoveUpContainer(Player* player, uint8_t cid)
 		#endif
 	}
 
+	int8_t test_cid = player->getContainerID(parentContainer);
+	if (test_cid != -1) {
+		player->closeContainer(test_cid);
+		player->sendCloseContainer(test_cid);
+		return;
+	}
+
 	player->addContainer(cid, parentContainer);
 	#if GAME_FEATURE_CONTAINER_PAGINATION > 0
 	player->sendContainer(cid, parentContainer, parentContainer->hasParent(), player->getContainerIndex(cid));
@@ -2899,7 +2916,7 @@ void Game::playerRotateItem(uint32_t playerId, const Position& pos, uint8_t stac
 	if (pos.x != 0xFFFF && !Position::areInRange<1, 1, 0>(pos, player->getPosition())) {
 		std::vector<Direction> listDir;
 		if (player->getPathTo(pos, listDir, 0, 1, true, false)) {
-			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 			player->setNextWalkActionTask(400, std::bind(&Game::playerRotateItem, this, playerId, pos, stackPos, spriteId));
 		} else {
 			player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -2947,7 +2964,7 @@ void Game::playerWrapableItem(uint32_t playerId, const Position& pos, uint8_t st
 	if (pos.x != 0xFFFF && !Position::areInRange<1, 1, 0>(pos, player->getPosition())) {
 		std::vector<Direction> listDir;
 		if (player->getPathTo(pos, listDir, 0, 1, true, false)) {
-			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 			player->setNextWalkActionTask(400, std::bind(&Game::playerWrapableItem, this, playerId, pos, stackPos, spriteId));
 		} else {
 			player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -3069,7 +3086,7 @@ void Game::playerBrowseField(uint32_t playerId, const Position& pos)
 	if (!Position::areInRange<1, 1>(playerPos, pos)) {
 		std::vector<Direction> listDir;
 		if (player->getPathTo(pos, listDir, 0, 1, true, false)) {
-			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 			player->setNextWalkActionTask(400, std::bind(&Game::playerBrowseField, this, playerId, pos));
 		} else {
 			player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -3212,7 +3229,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 	if (!Position::areInRange<1, 1>(tradeItemPosition, playerPosition)) {
 		std::vector<Direction> listDir;
 		if (player->getPathTo(pos, listDir, 0, 1, true, false)) {
-			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), listDir));
+			g_dispatcher.addTask(std::bind(&Game::playerAutoWalk, this, player->getID(), std::move(listDir)));
 			player->setNextWalkActionTask(400, std::bind(&Game::playerRequestTrade, this, playerId, pos, stackPos, tradePlayerId, spriteId));
 		} else {
 			player->sendCancelMessage(RETURNVALUE_THEREISNOWAY);
@@ -3971,12 +3988,13 @@ bool Game::playerSaySpell(Player* player, SpeakClasses type, const std::string& 
 
 void Game::playerWhisper(Player* player, const std::string& text)
 {
+	// Use getSpectatorsInternal here because we won't get any cached spectators anyway
 	SpectatorVector spectators;
-	map.getSpectators(spectators, player->getPosition(), false, false,
-	              Map::maxClientViewportX, Map::maxClientViewportX,
-	              Map::maxClientViewportY, Map::maxClientViewportY);
+	const Position& pos = player->getPosition();
+	map.getSpectatorsInternal(spectators, pos, Map::maxClientViewportX, Map::maxClientViewportX,
+			Map::maxClientViewportY, Map::maxClientViewportY, pos.z, pos.z, false);
 
-	//send to client
+	//send to client + event method
 	for (Creature* spectator : spectators) {
 		if (Player* spectatorPlayer = spectator->getPlayer()) {
 			if (!Position::areInRange<1, 1>(player->getPosition(), spectatorPlayer->getPosition())) {
@@ -3985,10 +4003,7 @@ void Game::playerWhisper(Player* player, const std::string& text)
 				spectatorPlayer->sendCreatureSay(player, TALKTYPE_WHISPER, text);
 			}
 		}
-	}
 
-	//event method
-	for (Creature* spectator : spectators) {
 		spectator->onCreatureSay(player, TALKTYPE_WHISPER, text);
 	}
 }
@@ -4105,28 +4120,30 @@ bool Game::internalCreatureSay(Creature* creature, SpeakClasses type, const std:
 		// is used if available and if it can be used, else a local vector is
 		// used (hopefully the compiler will optimize away the construction of
 		// the temporary when it's not used).
+
+		// Use getSpectatorsInternal here because we won't get any cached spectators anyway
 		if (type != TALKTYPE_YELL && type != TALKTYPE_MONSTER_YELL) {
-			map.getSpectators(spectators, *pos, false, false,
-			              Map::maxClientViewportX, Map::maxClientViewportX,
-			              Map::maxClientViewportY, Map::maxClientViewportY);
+			map.getSpectatorsInternal(spectators, *pos, Map::maxClientViewportX, Map::maxClientViewportX,
+					Map::maxClientViewportY, Map::maxClientViewportY, pos->z, pos->z, false);
 		} else {
-			map.getSpectators(spectators, *pos, true, false, 18, 18, 14, 14);
+			if (pos->z < 8) {
+				map.getSpectatorsInternal(spectators, *pos, 18, 18, 14, 14, 0, 7, false);
+			} else {
+				map.getSpectatorsInternal(spectators, *pos, 18, 18, 14, 14, pos->z, pos->z, false);
+			}
 		}
 	} else {
-		spectators = (*spectatorsPtr);
+		spectators = std::move(*spectatorsPtr);
 	}
 
-	//send to client
+	//send to client + event method
 	for (Creature* spectator : spectators) {
 		if (Player* tmpPlayer = spectator->getPlayer()) {
 			if (!ghostMode || tmpPlayer->canSeeCreature(creature)) {
 				tmpPlayer->sendCreatureSay(creature, type, text, pos);
 			}
 		}
-	}
 
-	//event method
-	for (Creature* spectator : spectators) {
 		spectator->onCreatureSay(creature, type, text);
 	}
 	return true;
@@ -6355,7 +6372,7 @@ void Game::playerAnswerModalWindow(Player* player, uint32_t modalWindowId, uint8
 
 	// offline training, hardcoded
 	if (modalWindowId == std::numeric_limits<uint32_t>::max()) {
-		if (button == 1) {
+		if (button == offlineTrainingWindow.defaultEnterButton) {
 			if (choice == SKILL_SWORD || choice == SKILL_AXE || choice == SKILL_CLUB || choice == SKILL_DISTANCE || choice == SKILL_MAGLEVEL) {
 				BedItem* bedItem = player->getBedItem();
 				if (bedItem && bedItem->sleep(player)) {

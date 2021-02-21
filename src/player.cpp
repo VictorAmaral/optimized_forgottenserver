@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020 Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -303,7 +304,7 @@ int32_t Player::getWeaponSkill(const Item* item) const
 			break;
 		}
 
-		case WEAPON_DISTANCE: {
+		case WEAPON_DISTANCE: case WEAPON_AMMO: {
 			attackSkill = getSkillLevel(SKILL_DISTANCE);
 			break;
 		}
@@ -1032,9 +1033,11 @@ void Player::sendAddContainerItem(const Container* container, const Item* item)
 				slot = containerSize;
 			}
 		} else if (openContainer.index >= container->capacity()) {
-			item = container->getItemByIndex(openContainer.index - 1);
+			item = container->getItemByIndex(openContainer.index);
 		}
-		client->sendAddContainerItem(it.first, slot, item);
+		if (item) {
+			client->sendAddContainerItem(it.first, slot, item);
+		}
 		#else
 		client->sendAddContainerItem(it.first, item);
 		#endif

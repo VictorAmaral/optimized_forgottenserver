@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1894,12 +1895,13 @@ uint16_t Items::getItemIdByName(const std::string& name)
 		return 0;
 	}
 
-	const std::string& compare = asLowerCaseString(name);
-	size_t nameSize = compare.length();
-	const char* itemName = compare.c_str();
+	const std::string& lowerCaseName = asLowerCaseString(name);
+	const size_t lowerCaseName_len = lowerCaseName.length();
+	const char* lowerCaseName_cstr = lowerCaseName.c_str();
+
 	for (size_t i = 100, size = items.size(); i < size; ++i) {
 		ItemType& it = items[i];
-		if (nameSize == it.name.length() && !tfs_strncmp(itemName, asLowerCaseString(it.name).c_str(), nameSize)) {
+		if (lowerCaseName_len == it.name.length() && !tfs_strncmp(lowerCaseName_cstr, asLowerCaseString(it.name).c_str(), lowerCaseName_len)) {
 			return i;
 		}
 	}

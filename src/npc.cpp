@@ -1,6 +1,7 @@
 /**
  * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2020  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019  Mark Samman <mark.samman@gmail.com>
+ * Copyright (C) 2019-2021  Saiyans King
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -485,9 +486,9 @@ bool Npc::getRandomStep(Direction& dir) const
 
 void Npc::doMoveTo(const Position& pos)
 {
-	std::vector<Direction> listDir;
-	if (getPathTo(pos, listDir, 1, 1, true, false)) {
-		startAutoWalk(listDir);
+	listWalkDir.clear();
+	if (getPathTo(pos, listWalkDir, 1, 1, true, false)) {
+		startAutoWalk();
 	}
 }
 
