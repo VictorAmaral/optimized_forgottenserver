@@ -48,7 +48,6 @@
 #include "database.h"
 #include "enums.h"
 #include "position.h"
-#include <boost/lexical_cast.hpp>
 
 class Thing;
 class Creature;
@@ -349,6 +348,13 @@ class LuaScriptInterface
 		static Player* getPlayer(lua_State* L, int32_t arg);
 
 		template<typename T>
+		static typename std::enable_if<std::is_same<T, bool>::value, T>::type
+			getField(lua_State* L, int32_t arg, const std::string& key)
+		{
+			lua_getfield(L, arg, key.c_str());
+			return getBoolean(L, -1);
+		}
+		template<typename T>
 		static T getField(lua_State* L, int32_t arg, const std::string& key)
 		{
 			lua_getfield(L, arg, key.c_str());
@@ -471,18 +477,8 @@ class LuaScriptInterface
 		//
 		static int luaCreateCombatArea(lua_State* L);
 
-		static int luaDoAreaCombatHealth(lua_State* L);
-		static int luaDoTargetCombatHealth(lua_State* L);
-
-		//
-		static int luaDoAreaCombatMana(lua_State* L);
-		static int luaDoTargetCombatMana(lua_State* L);
-
-		static int luaDoAreaCombatCondition(lua_State* L);
-		static int luaDoTargetCombatCondition(lua_State* L);
-
-		static int luaDoAreaCombatDispel(lua_State* L);
-		static int luaDoTargetCombatDispel(lua_State* L);
+		static int luaDoAreaCombat(lua_State* L);
+		static int luaDoTargetCombat(lua_State* L);
 
 		static int luaDoChallengeCreature(lua_State* L);
 

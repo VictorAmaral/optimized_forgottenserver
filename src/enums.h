@@ -64,6 +64,17 @@ enum ThreadState {
 	THREAD_STATE_TERMINATED,
 };
 
+#if GAME_FEATURE_SESSIONEND > 0
+enum SessionEndInformations : uint8_t {
+	// I'm guessing unknown types are ban/protocol error or something
+	// but since there aren't any difference from logout should we care?
+	SESSION_END_LOGOUT,
+	SESSION_END_UNK2,
+	SESSION_END_FORCECLOSE,
+	SESSION_END_UNK3,
+};
+#endif
+
 enum itemAttrTypes : uint32_t {
 	ITEM_ATTRIBUTE_NONE,
 
@@ -876,17 +887,12 @@ enum CombatOrigin
 struct CombatDamage
 {
 	struct {
-		CombatType_t type;
-		int32_t value;
+		CombatType_t type = COMBAT_NONE;
+		int32_t value = 0;
 	} primary, secondary;
 
-	CombatOrigin origin;
-	CombatDamage()
-	{
-		origin = ORIGIN_NONE;
-		primary.type = secondary.type = COMBAT_NONE;
-		primary.value = secondary.value = 0;
-	}
+	CombatOrigin origin = ORIGIN_NONE;
+	BlockType_t blockType = BLOCK_NONE;
 };
 
 using MarketOfferList = std::vector<MarketOffer>;
